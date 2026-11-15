@@ -79,6 +79,16 @@ body {
   @apply mb-1 block text-xs font-medium text-muted;
 }
 
+@media print {
+  @page {
+    size: A4;
+    margin: 8mm 0;
+  }
+  body {
+    background: #fff;
+  }
+}
+
 textarea.input {
   height: auto;
   padding-top: .5rem;

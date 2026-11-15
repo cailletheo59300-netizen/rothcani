@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, QrCode } from "lucide-react";
 import { requireUser } from "@/lib/supabase/server";
 import { byId, loadCosts, loadRefs, signPhotos } from "@/lib/data";
 import { STATUS_META } from "@/lib/format";
@@ -76,9 +76,14 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
         title="Stock"
         subtitle={`${total} article${total > 1 ? "s" : ""}${hasFilter ? " (filtrés)" : ""}`}
         action={
-          <Link href="/ajout" className="btn-primary hidden md:inline-flex">
-            <Plus size={16} /> Ajouter
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/etiquettes" className="btn-ghost">
+              <QrCode size={16} /> Étiquettes
+            </Link>
+            <Link href="/ajout" className="btn-primary hidden md:inline-flex">
+              <Plus size={16} /> Ajouter
+            </Link>
+          </div>
         }
       />
 

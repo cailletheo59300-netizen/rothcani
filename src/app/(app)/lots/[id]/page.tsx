@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, QrCode } from "lucide-react";
 import { requireUser } from "@/lib/supabase/server";
 import { loadCosts, loadRefs, signPhotos } from "@/lib/data";
 import { lotStats } from "@/lib/lot-stats";
@@ -36,9 +36,14 @@ export default async function LotPage({ params }: { params: Promise<{ id: string
         title={lot.name}
         subtitle={`Acheté le ${date(lot.purchased_on)} · répartition ${MODE_LABEL[lot.cost_mode]}`}
         action={
-          <Link href={`/ajout?lot=${lot.id}`} className="btn-primary">
-            <Plus size={16} /> Ajouter des articles à ce lot
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/etiquettes?lot=${lot.id}`} className="btn-ghost">
+              <QrCode size={16} /> Étiquettes du lot
+            </Link>
+            <Link href={`/ajout?lot=${lot.id}`} className="btn-primary">
+              <Plus size={16} /> Ajouter des articles à ce lot
+            </Link>
+          </div>
         }
       />
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import { requireUser } from "@/lib/supabase/server";
 import { loadProfile, loadRefs } from "@/lib/data";
@@ -8,11 +9,20 @@ import { ImportCsv } from "./import-csv";
 
 export default async function ReglagesPage() {
   const { supabase, user } = await requireUser();
-  const [profile, refs] = await Promise.all([loadProfile(supabase, user.id), loadRefs(supabase)]);
+  const [profile, refs, adminRes] = await Promise.all([loadProfile(supabase, user.id), loadRefs(supabase), supabase.rpc("admin_role")]);
 
   return (
     <>
-      <PageHeader title="Réglages" />
+      <PageHeader
+        title="Réglages"
+        action={
+          adminRes.data ? (
+            <Link href="/admin" className="btn-ghost">
+              Administration
+            </Link>
+          ) : undefined
+        }
+      />
       <div className="grid gap-4 lg:grid-cols-2">
         <form action={saveProfile} className="card space-y-4 p-4 lg:col-span-2">
           <h2 className="text-sm font-medium">Frais par défaut à chaque vente</h2>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MapPin } from "lucide-react";
+import { MapPin, QrCode } from "lucide-react";
 import { requireUser } from "@/lib/supabase/server";
 import { byId, loadCosts, loadProfile, loadRefs, saleMargin, signPhotos } from "@/lib/data";
 import { STATUS_META, date, euro, ref } from "@/lib/format";
@@ -36,6 +36,11 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
     <>
       <PageHeader
         back={{ href: "/stock", label: "Stock" }}
+        action={
+          <Link href={`/etiquettes?ids=${item.id}`} className="btn-ghost">
+            <QrCode size={16} /> Étiquette
+          </Link>
+        }
         title={item.title}
         subtitle={
           <span className="flex flex-wrap items-center gap-2">

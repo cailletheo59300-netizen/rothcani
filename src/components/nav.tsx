@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Boxes, Plus, Receipt, Package, Settings, LogOut } from "lucide-react";
+import { Home, Boxes, Plus, Receipt, Package, Settings, LogOut, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const LINKS = [
@@ -22,7 +22,7 @@ async function signOut() {
   window.location.href = "/login";
 }
 
-export function Sidebar({ email }: { email: string }) {
+export function Sidebar({ email, isAdmin }: { email: string; isAdmin: boolean }) {
   const path = usePathname();
   return (
     <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border bg-surface px-3 py-5 md:flex">
@@ -35,7 +35,7 @@ export function Sidebar({ email }: { email: string }) {
         <Plus size={16} /> Ajouter des articles
       </Link>
       <nav className="flex flex-col gap-0.5">
-        {LINKS.map(({ href, label, icon: Icon }) => (
+        {[...LINKS, ...(isAdmin ? [{ href: "/admin", label: "Administration", icon: Shield }] : [])].map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}

@@ -149,6 +149,9 @@ export function StockList({ rows, locations, accounts }: { rows: StockRow[]; loc
                 ))}
               </select>
             )}
+            <Link className="btn-ghost h-9" href={`/etiquettes?ids=${ids.join(",")}`}>
+              Étiquettes
+            </Link>
             <button
               className="btn-danger h-9"
               disabled={pending}
