@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Checklist, type Progress } from "@/components/checklist";
 import { requireUser } from "@/lib/supabase/server";
 import { loadProfile, signPhotos } from "@/lib/data";
 import { STATUS_META, euro, pct, ref, daysSince } from "@/lib/format";
@@ -8,6 +10,7 @@ import type { ItemStatus } from "@/lib/types";
 export default async function Dashboard() {
   const { supabase, user } = await requireUser();
   const profile = await loadProfile(supabase, user.id);
+  if (!profile.onboarded_at) redirect("/bienvenue");
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
@@ -23,7 +26,7 @@ export default async function Dashboard() {
     avg_days_to_sell: number | null;
     dormant_count: number;
   };
-  const [statsRes, dormant] = await Promise.all([
+  const [statsRes, dormant, progressRes] = await Promise.all([
     supabase.rpc("dashboard_stats", { month_start: monthStart, dormant_before: dormantBefore }),
     supabase
       .from("items")
@@ -32,7 +35,9 @@ export default async function Dashboard() {
       .lt("listed_at", dormantBefore)
       .order("listed_at")
       .limit(6),
+    supabase.rpc("onboarding_progress"),
   ]);
+  const checklist = profile.checklist_hidden ? null : <Checklist progress={progressRes.data as Progress} />;
   const st = statsRes.data as Stats;
   const counts = new Map(Object.entries(st.counts) as [ItemStatus, number][]);
   const stockValue = Number(st.stock_value);
@@ -47,7 +52,8 @@ export default async function Dashboard() {
   if (st.items_total === 0) {
     return (
       <>
-        <PageHeader title="Bienvenue 👋" subtitle="Commencez par créer votre premier lot ou ajouter des articles." />
+        <PageHeader title={`Bienvenue${profile.display_name ? ` ${profile.display_name}` : ""} 👋`} subtitle="Commencez par créer votre premier lot ou ajouter des articles." />
+        {checklist}
         <Empty
           title="Votre stock est vide"
           text="Créez un lot (un arrivage) pour répartir automatiquement son coût sur chaque article, ou ajoutez des articles un par un. Vous pouvez aussi importer un fichier Excel depuis les réglages."
@@ -66,6 +72,7 @@ export default async function Dashboard() {
   return (
     <>
       <PageHeader title="Accueil" subtitle={`Vos chiffres de ${monthLabel}`} />
+      {checklist}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Bénéfice du mois" value={euro(profit)} tone={profit >= 0 ? "good" : "bad"} hint={`${st.month_sales} vente${st.month_sales > 1 ? "s" : ""}`} />

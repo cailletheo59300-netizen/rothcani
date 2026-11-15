@@ -73,4 +73,6 @@ export type Profile = {
   default_shipping_fee: number;
   default_platform_fee: number;
   dormant_days: number;
+  onboarded_at: string | null;
+  checklist_hidden: boolean;
 };
