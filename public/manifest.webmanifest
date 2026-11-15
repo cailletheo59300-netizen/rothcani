@@ -1,0 +1,13 @@
+{
+  "name": "Revento",
+  "short_name": "Revento",
+  "description": "Le stock et les marges des revendeurs, au même endroit.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d12",
+  "theme_color": "#6d4aff",
+  "lang": "fr",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
