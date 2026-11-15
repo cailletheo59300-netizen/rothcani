@@ -35,10 +35,10 @@ export function PhotoManager({ itemId, photos, urls }: { itemId: string; photos:
   return (
     <div className="flex gap-2 overflow-x-auto pb-1">
       {photos.map((p, i) => (
-        <div key={p} className="group relative h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-surface-2">
+        <div key={p} className="group relative h-32 w-32 shrink-0 overflow-hidden rounded-2xl bg-surface-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {urls[p] && <img src={urls[p]} alt="" className="h-full w-full object-cover" />}
-          {i === 0 && <span className="absolute left-1 top-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white">Couverture</span>}
+          {i === 0 && <span className="absolute bottom-1.5 left-1.5 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] text-white">Couverture</span>}
           <div className="absolute right-1 top-1 flex gap-1">
             {i > 0 && (
               <button type="button" disabled={busy} onClick={() => cover(p)} className="rounded-md bg-black/60 p-1 text-white" title="Mettre en couverture">
@@ -55,10 +55,10 @@ export function PhotoManager({ itemId, photos, urls }: { itemId: string; photos:
         type="button"
         disabled={busy}
         onClick={() => input.current?.click()}
-        className="flex h-28 w-28 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-xs text-muted hover:border-accent hover:text-accent"
+        className="flex h-32 w-32 shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border bg-surface text-sm text-muted transition-colors hover:border-accent hover:text-accent"
       >
         <Camera size={20} />
-        {busy ? "Envoi…" : "Ajouter"}
+        {busy ? "Envoi…" : photos.length ? "Ajouter" : "Ajouter des photos"}
       </button>
       <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => add(e.target.files)} />
     </div>

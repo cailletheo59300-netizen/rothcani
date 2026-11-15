@@ -77,12 +77,11 @@ export function QuickAdd({
 
   return (
     <div className="grid gap-4 lg:grid-cols-3">
-      <form ref={form} key={formKey} onSubmit={submit} className="card space-y-4 p-4 lg:col-span-2">
+      <form ref={form} key={formKey} onSubmit={submit} className="card space-y-5 p-5 lg:col-span-2">
         <div>
-          <p className="label">Photos</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {files.map((f, i) => (
-              <div key={i} className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-surface-2">
+              <div key={i} className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-surface-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={URL.createObjectURL(f)} alt="" className="h-full w-full object-cover" />
                 <button
@@ -98,10 +97,10 @@ export function QuickAdd({
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
-              className="flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-xs text-muted hover:border-accent hover:text-accent"
+              className="flex h-28 w-28 shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border text-sm text-muted transition-colors hover:border-accent hover:text-accent"
             >
               <Camera size={22} />
-              Photos
+              {files.length ? "Ajouter" : "Photos"}
             </button>
             <input
               ref={fileInput}
@@ -126,21 +125,19 @@ export function QuickAdd({
           lots={lots}
           locations={locations}
           accounts={accounts}
+          mode="quick"
         />
 
         {error && <p className="text-sm text-bad">{error}</p>}
-        <div className="flex flex-wrap justify-end gap-2">
-          <button className="btn-primary" disabled={busy}>
-            {busy ? "Enregistrement…" : "Enregistrer et suivant →"}
-          </button>
-        </div>
+        <button className="btn-primary h-11 w-full" disabled={busy}>
+          {busy ? "Enregistrement…" : "Enregistrer et passer au suivant"}
+        </button>
       </form>
 
-      <aside className="card h-fit p-4">
-        <h2 className="mb-1 text-sm font-medium">Ajoutés maintenant</h2>
-        <p className="mb-3 text-xs text-muted">Le lot, l&apos;emplacement et le statut restent sélectionnés d&apos;un article à l&apos;autre.</p>
+      <aside className="h-fit space-y-3">
+        <h2 className="section-title">Ajoutés ({added.length})</h2>
         {added.length === 0 ? (
-          <p className="text-sm text-muted">Rien pour l&apos;instant.</p>
+          <p className="text-sm text-muted">Le lot et l&apos;emplacement restent sélectionnés d&apos;un article à l&apos;autre.</p>
         ) : (
           <ul className="space-y-2">
             {added.map((a) => (

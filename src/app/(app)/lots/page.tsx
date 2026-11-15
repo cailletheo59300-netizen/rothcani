@@ -4,9 +4,7 @@ import { byId, loadRefs } from "@/lib/data";
 import { lotStats, supplierStats } from "@/lib/lot-stats";
 import { date, euro, pct } from "@/lib/format";
 import { Empty, PageHeader } from "@/components/ui";
-import { LotFields } from "@/components/lot-fields";
-import { Submit } from "@/components/submit";
-import { createLot } from "../actions";
+import { Plus } from "lucide-react";
 
 export default async function LotsPage() {
   const { supabase } = await requireUser();
@@ -20,36 +18,29 @@ export default async function LotsPage() {
 
   return (
     <>
-      <PageHeader title="Lots" subtitle="Vos arrivages : ce que chacun vous a coûté et rapporté." />
-
-      <details className="card mb-5 p-4" open={refs.lots.length === 0}>
-        <summary className="cursor-pointer text-sm font-medium">+ Nouveau lot</summary>
-        <form action={createLot} className="mt-4 space-y-4">
-          <LotFields suppliers={refs.suppliers} withCount />
-          {refs.suppliers.length === 0 && (
-            <p className="text-xs text-muted">
-              Astuce : ajoutez vos fournisseurs dans <Link className="underline" href="/reglages">Réglages</Link> pour suivre leur rentabilité.
-            </p>
-          )}
-          <div className="flex justify-end">
-            <Submit>Créer le lot</Submit>
-          </div>
-        </form>
-      </details>
+      <PageHeader
+        title="Lots"
+        subtitle="Ce que chaque arrivage vous a coûté et rapporté."
+        action={
+          <Link href="/lots/nouveau" className="btn-primary">
+            <Plus size={16} /> Nouveau lot
+          </Link>
+        }
+      />
 
       {refs.lots.length === 0 ? (
-        <Empty title="Aucun lot" text="Un lot regroupe des articles achetés ensemble. Son coût total est réparti automatiquement sur chaque article." />
+        <Empty title="Aucun lot" text="Un lot regroupe des articles achetés ensemble. Son prix est réparti automatiquement sur chaque article." action={<Link href="/lots/nouveau" className="btn-primary">Créer un lot</Link>} />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {refs.lots.map((l) => {
             const s = stats.get(l.id)!;
             const progress = s.invested > 0 ? Math.min(1, s.recovered / s.invested) : 0;
             return (
-              <Link key={l.id} href={`/lots/${l.id}`} className="card block p-4 transition hover:border-accent">
+              <Link key={l.id} href={`/lots/${l.id}`} className="card block p-5 transition-colors hover:bg-surface-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate font-medium">{l.name}</p>
-                    <p className="text-xs text-muted">
+                    <p className="mt-0.5 text-[13px] text-muted">
                       {date(l.purchased_on)}
                       {l.supplier_id && suppliers.get(l.supplier_id) ? ` · ${suppliers.get(l.supplier_id)!.name}` : ""}
                     </p>
@@ -59,15 +50,13 @@ export default async function LotsPage() {
                     {euro(s.profit)}
                   </p>
                 </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2">
+                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-2">
                   <div className="h-full rounded-full bg-accent" style={{ width: `${progress * 100}%` }} />
                 </div>
-                <div className="mt-2 flex justify-between text-xs text-muted">
+                <div className="mt-2 flex justify-between text-[13px] text-muted">
+                  <span>{pct(progress)} remboursé</span>
                   <span>
-                    {euro(s.recovered)} récupérés sur {euro(s.invested)} ({pct(progress)})
-                  </span>
-                  <span>
-                    {s.sold}/{s.items} vendus
+                    {s.sold} vendu{s.sold > 1 ? "s" : ""} sur {s.items}
                   </span>
                 </div>
               </Link>
@@ -77,8 +66,8 @@ export default async function LotsPage() {
       )}
 
       {supRows.length > 0 && (
-        <section className="mt-8">
-          <h2 className="mb-3 text-sm font-medium text-muted">Rentabilité par fournisseur</h2>
+        <section className="mt-10">
+          <h2 className="section-title mb-3">Par fournisseur</h2>
           <div className="card overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-left text-xs text-muted">
@@ -110,7 +99,7 @@ export default async function LotsPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-xs text-muted">Un résultat négatif est normal tant que le lot n&apos;est pas écoulé : comparez surtout le rythme de vente.</p>
+          
         </section>
       )}
     </>

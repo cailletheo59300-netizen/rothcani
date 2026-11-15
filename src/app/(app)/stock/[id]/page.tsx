@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Copy, MapPin, QrCode } from "lucide-react";
+import { ChevronDown, Copy, MoreHorizontal, QrCode, Trash2 } from "lucide-react";
 import { requireUser } from "@/lib/supabase/server";
 import { byId, loadCosts, loadProfile, loadRefs, saleMargin, signPhotos } from "@/lib/data";
 import { STATUS_META, date, euro, ref } from "@/lib/format";
@@ -31,75 +31,79 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   const sale = saleRes.data as Sale | null;
   const location = item.location_id ? byId(refs.locations).get(item.location_id) : null;
   const lot = item.lot_id ? byId(refs.lots).get(item.lot_id) : null;
-  const potential = item.listed_price != null ? item.listed_price - cost : null;
+  const margin = sale ? saleMargin(sale, cost) : item.listed_price != null ? item.listed_price - cost : null;
+  const defaultFees = Number(profile.default_packaging_fee) + Number(profile.default_shipping_fee) + Number(profile.default_platform_fee);
 
   return (
     <>
       <PageHeader
         back={{ href: "/stock", label: "Stock" }}
-        action={
-          <div className="flex gap-2">
-            <form action={duplicateItem.bind(null, item.id)}>
-              <Submit className="btn-ghost">
-                <Copy size={16} /> Dupliquer
-              </Submit>
-            </form>
-            <Link href={`/etiquettes?ids=${item.id}`} className="btn-ghost">
-              <QrCode size={16} /> Étiquette
-            </Link>
-          </div>
-        }
         title={item.title}
         subtitle={
-          <span className="flex flex-wrap items-center gap-2">
-            {ref(item.ref_number)} <StatusBadge status={item.status} />
-            {location && (
-              <span className="inline-flex items-center gap-1">
-                <MapPin size={12} /> {location.name}
-              </span>
-            )}
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>{ref(item.ref_number)}</span>
+            <StatusBadge status={item.status} />
+            {location && <span>Rangé dans {location.name}</span>}
           </span>
+        }
+        action={
+          <details className="relative">
+            <summary className="btn-ghost h-10 w-10 px-0" aria-label="Plus d'actions">
+              <MoreHorizontal size={18} />
+            </summary>
+            <div className="card absolute right-0 z-20 mt-2 w-52 p-1.5 shadow-xl">
+              <form action={duplicateItem.bind(null, item.id)}>
+                <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-2">
+                  <Copy size={15} /> Dupliquer
+                </button>
+              </form>
+              <Link href={`/etiquettes?ids=${item.id}`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-2">
+                <QrCode size={15} /> Imprimer l&apos;étiquette
+              </Link>
+              <form action={deleteItem.bind(null, item.id)}>
+                <Submit className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-bad hover:bg-surface-2" confirmText="Supprimer définitivement cet article et ses photos ?">
+                  <Trash2 size={15} /> Supprimer
+                </Submit>
+              </form>
+            </div>
+          </details>
         }
       />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
-          <section className="card p-4">
-            <h2 className="mb-3 text-sm font-medium">Photos</h2>
-            <PhotoManager itemId={item.id} photos={item.photos} urls={Object.fromEntries(urls)} />
-          </section>
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="space-y-6">
+          <PhotoManager itemId={item.id} photos={item.photos} urls={Object.fromEntries(urls)} />
 
-          <AiListing itemId={item.id} hasPhotos={item.photos.length > 0} description={item.description} />
+          <AiListing itemId={item.id} hasPhotos={item.photos.length > 0} />
 
-          <form key={`${item.status}-${item.status_changed_at}-${item.title}-${item.description ?? ""}-${item.listed_price ?? ""}`} action={updateItem.bind(null, item.id)} className="card space-y-4 p-4">
-            <h2 className="text-sm font-medium">Informations</h2>
+          <form
+            key={`${item.status}-${item.status_changed_at}-${item.title}-${item.description ?? ""}-${item.listed_price ?? ""}`}
+            action={updateItem.bind(null, item.id)}
+            className="card p-5"
+          >
             <ItemFields item={item} lots={refs.lots} locations={refs.locations} accounts={refs.accounts} />
-            <div className="flex justify-end">
-              <Submit>Enregistrer</Submit>
+            <div className="mt-8 flex justify-end border-t border-border pt-5">
+              <Submit>Enregistrer les modifications</Submit>
             </div>
           </form>
         </div>
 
-        <div className="space-y-4">
-          <section className="card p-4">
-            <h2 className="mb-3 text-sm font-medium">Rentabilité</h2>
-            <dl className="space-y-2 text-sm">
-              <Row label="Coût d'achat" value={euro(cost)} hint={item.manual_cost != null ? "saisi à la main" : lot ? `réparti depuis « ${lot.name} »` : undefined} />
-              <Row label="Prix affiché" value={item.listed_price != null ? euro(item.listed_price) : "—"} />
-              {!sale && potential != null && <Row label="Marge potentielle" value={euro(potential)} tone={potential >= 0 ? "good" : "bad"} />}
-              {sale && (
-                <>
-                  <Row label="Vendu" value={euro(sale.sale_price)} hint={date(sale.sold_on)} />
-                  <Row label="Frais" value={`− ${euro(Number(sale.packaging_fee) + Number(sale.shipping_fee) + Number(sale.platform_fee))}`} />
-                  <Row label="Marge réalisée" value={euro(saleMargin(sale, cost))} tone={saleMargin(sale, cost) >= 0 ? "good" : "bad"} strong />
-                </>
-              )}
+        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+          <section className="card p-5">
+            <p className="text-sm text-muted">{sale ? "Marge réalisée" : "Marge prévue"}</p>
+            <p className={`mt-1 text-[28px] font-semibold leading-tight tracking-tight ${margin == null ? "" : margin >= 0 ? "text-good" : "text-bad"}`}>
+              {margin == null ? "—" : euro(margin)}
+            </p>
+            <dl className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
+              <Row label={sale ? "Vendu" : "Prix de vente"} value={sale ? euro(sale.sale_price) : item.listed_price != null ? euro(item.listed_price) : "—"} />
+              <Row label="Prix d'achat" value={euro(cost)} hint={item.manual_cost == null && lot ? `réparti depuis le lot « ${lot.name} »` : undefined} />
+              {sale && <Row label="Frais" value={euro(Number(sale.packaging_fee) + Number(sale.shipping_fee) + Number(sale.platform_fee))} />}
             </dl>
           </section>
 
           {!sale && item.status !== "ecarte" && (
-            <form action={createSale.bind(null, item.id)} className="card space-y-3 p-4">
-              <h2 className="text-sm font-medium">Enregistrer la vente</h2>
+            <form action={createSale.bind(null, item.id)} className="card space-y-3 p-5">
+              <h2 className="font-medium">Article vendu ?</h2>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Prix de vente (€)">
                   <input name="sale_price" required inputMode="decimal" defaultValue={item.listed_price ?? ""} className="input" />
@@ -107,86 +111,90 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
                 <Field label="Date">
                   <input name="sold_on" type="date" defaultValue={new Date().toISOString().slice(0, 10)} className="input" />
                 </Field>
-                <Field label="Emballage (€)">
-                  <input name="packaging_fee" inputMode="decimal" defaultValue={profile.default_packaging_fee} className="input" />
-                </Field>
-                <Field label="Envoi (€)">
-                  <input name="shipping_fee" inputMode="decimal" defaultValue={profile.default_shipping_fee} className="input" />
-                </Field>
-                <Field label="Frais plateforme (€)">
-                  <input name="platform_fee" inputMode="decimal" defaultValue={profile.default_platform_fee} className="input" />
-                </Field>
-                <Field label="Compte">
-                  <select name="sales_account_id" defaultValue={item.sales_account_id ?? ""} className="input">
-                    <option value="">—</option>
-                    {refs.accounts.map((a) => (
-                      <option key={a.id} value={a.id}>{a.name}</option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Acheteur (optionnel)" className="col-span-2">
-                  <input name="buyer" className="input" />
-                </Field>
               </div>
-              <Submit className="btn-primary w-full">Marquer comme vendu</Submit>
+              <details className="group">
+                <summary className="flex items-center justify-between text-sm text-muted">
+                  Frais : {euro(defaultFees)}
+                  <ChevronDown size={16} className="transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <Field label="Emballage (€)">
+                    <input name="packaging_fee" inputMode="decimal" defaultValue={profile.default_packaging_fee} className="input" />
+                  </Field>
+                  <Field label="Envoi (€)">
+                    <input name="shipping_fee" inputMode="decimal" defaultValue={profile.default_shipping_fee} className="input" />
+                  </Field>
+                  <Field label="Plateforme (€)">
+                    <input name="platform_fee" inputMode="decimal" defaultValue={profile.default_platform_fee} className="input" />
+                  </Field>
+                  <Field label="Acheteur">
+                    <input name="buyer" className="input" placeholder="Optionnel" />
+                  </Field>
+                </div>
+              </details>
+              <input type="hidden" name="sales_account_id" value={item.sales_account_id ?? ""} />
+              <Submit className="btn-primary w-full">Enregistrer la vente</Submit>
             </form>
           )}
 
           {sale && (
-            <section className="card space-y-2 p-4">
-              <h2 className="text-sm font-medium">Vente</h2>
-              {location && (
-                <p className="rounded-xl bg-accent-soft p-3 text-sm">
-                  📦 À récupérer dans <strong>{location.name}</strong>
-                </p>
-              )}
-              <div className="flex flex-wrap gap-2">
-                {item.status === "vendu" && (
-                  <form action={markShipped.bind(null, [item.id])}>
-                    <Submit>Marquer expédié</Submit>
-                  </form>
+            <section className="card space-y-3 p-5">
+              <h2 className="font-medium">{item.status === "vendu" ? "À expédier" : "Vente terminée"}</h2>
+              <p className="text-sm text-muted">
+                Vendu le {date(sale.sold_on)}
+                {location && item.status === "vendu" && (
+                  <>
+                    {" "}
+                    · à récupérer dans <span className="font-medium text-text">{location.name}</span>
+                  </>
                 )}
-                <form action={cancelSale.bind(null, item.id)}>
-                  <Submit className="btn-ghost" confirmText="Annuler la vente ? L'article repassera « En ligne ».">Annuler la vente</Submit>
+              </p>
+              {item.status === "vendu" && (
+                <form action={markShipped.bind(null, [item.id])}>
+                  <Submit className="btn-primary w-full">Marquer comme expédié</Submit>
                 </form>
-              </div>
+              )}
+              <form action={cancelSale.bind(null, item.id)}>
+                <Submit className="btn-quiet w-full" confirmText="Annuler la vente ? L'article repassera « En ligne ».">
+                  Annuler la vente
+                </Submit>
+              </form>
             </section>
           )}
 
-          <section className="card p-4">
-            <h2 className="mb-3 text-sm font-medium">Historique</h2>
-            <ol className="space-y-2 text-sm">
+          <details className="group card p-5">
+            <summary className="flex items-center justify-between text-sm font-medium">
+              Historique
+              <ChevronDown size={16} className="text-muted transition-transform group-open:rotate-180" />
+            </summary>
+            <ol className="mt-3 space-y-2 text-sm">
               {(historyRes.data ?? []).map((h: { status: ItemStatus; changed_at: string }, i: number) => (
                 <li key={i} className="flex items-center justify-between gap-2">
                   <span>{STATUS_META[h.status].label}</span>
-                  <span className="text-xs text-muted">{date(h.changed_at)}</span>
+                  <span className="text-muted">{date(h.changed_at)}</span>
                 </li>
               ))}
             </ol>
             {lot && (
-              <p className="mt-3 border-t border-border pt-3 text-xs text-muted">
-                Lot : <Link className="underline" href={`/lots/${lot.id}`}>{lot.name}</Link>
+              <p className="mt-3 border-t border-border pt-3 text-sm text-muted">
+                Lot : <Link className="text-text underline-offset-2 hover:underline" href={`/lots/${lot.id}`}>{lot.name}</Link>
               </p>
             )}
-          </section>
-
-          <form action={deleteItem.bind(null, item.id)}>
-            <Submit className="btn-danger w-full" confirmText="Supprimer définitivement cet article et ses photos ?">Supprimer l&apos;article</Submit>
-          </form>
-        </div>
+          </details>
+        </aside>
       </div>
     </>
   );
 }
 
-function Row({ label, value, hint, tone, strong }: { label: string; value: string; hint?: string; tone?: "good" | "bad"; strong?: boolean }) {
+function Row({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-2">
+    <div className="flex items-baseline justify-between gap-3">
       <dt className="text-muted">
         {label}
-        {hint && <span className="block text-[11px]">{hint}</span>}
+        {hint && <span className="block text-xs">{hint}</span>}
       </dt>
-      <dd className={`${strong ? "text-base font-semibold" : "font-medium"} ${tone === "good" ? "text-good" : tone === "bad" ? "text-bad" : ""}`}>{value}</dd>
+      <dd className="font-medium">{value}</dd>
     </div>
   );
 }

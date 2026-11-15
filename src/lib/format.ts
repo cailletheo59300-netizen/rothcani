@@ -14,17 +14,27 @@ export const ref = (n: number) => `A-${String(n).padStart(4, "0")}`;
 export const daysSince = (d: string | null | undefined) =>
   d ? Math.floor((Date.now() - new Date(d).getTime()) / 86_400_000) : 0;
 
-export const STATUS_META: Record<ItemStatus, { label: string; short: string; tone: string }> = {
-  arrivage: { label: "Arrivage", short: "Arrivage", tone: "bg-slate-500/15 text-slate-600 dark:text-slate-300" },
-  tri: { label: "Tri", short: "Tri", tone: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
-  preparation: { label: "Préparation", short: "Prépa", tone: "bg-orange-500/15 text-orange-700 dark:text-orange-300" },
-  photos: { label: "Photos", short: "Photos", tone: "bg-pink-500/15 text-pink-700 dark:text-pink-300" },
-  pret: { label: "Prêt à publier", short: "Prêt", tone: "bg-sky-500/15 text-sky-700 dark:text-sky-300" },
-  en_ligne: { label: "En ligne", short: "En ligne", tone: "bg-violet-500/15 text-violet-700 dark:text-violet-300" },
-  vendu: { label: "Vendu", short: "Vendu", tone: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" },
-  expedie: { label: "Expédié", short: "Expédié", tone: "bg-emerald-700/15 text-emerald-800 dark:text-emerald-200" },
-  ecarte: { label: "Écarté", short: "Écarté", tone: "bg-red-500/15 text-red-700 dark:text-red-300" },
+export type Phase = "prep" | "online" | "sold" | "out";
+
+export const STATUS_META: Record<ItemStatus, { label: string; phase: Phase }> = {
+  arrivage: { label: "Arrivage", phase: "prep" },
+  tri: { label: "Tri", phase: "prep" },
+  preparation: { label: "Préparation", phase: "prep" },
+  photos: { label: "Photos", phase: "prep" },
+  pret: { label: "Prêt à publier", phase: "prep" },
+  en_ligne: { label: "En ligne", phase: "online" },
+  vendu: { label: "À expédier", phase: "sold" },
+  expedie: { label: "Expédié", phase: "sold" },
+  ecarte: { label: "Écarté", phase: "out" },
 };
+
+/** Les 3 grandes étapes affichées à l'utilisateur (les statuts détaillés restent disponibles). */
+export const PHASES: { key: Exclude<Phase, "out">; label: string; statuses: ItemStatus[]; dot: string }[] = [
+  { key: "prep", label: "À préparer", statuses: ["arrivage", "tri", "preparation", "photos", "pret"], dot: "bg-amber-500" },
+  { key: "online", label: "En vente", statuses: ["en_ligne"], dot: "bg-accent" },
+  { key: "sold", label: "Vendus", statuses: ["vendu", "expedie"], dot: "bg-good" },
+];
+export const PHASE_DOT: Record<Phase, string> = { prep: "bg-amber-500", online: "bg-accent", sold: "bg-good", out: "bg-muted" };
 
 /** Statuts où l'article est encore en stock (non vendu, non écarté). */
 export const IN_STOCK: ItemStatus[] = ["arrivage", "tri", "preparation", "photos", "pret", "en_ligne"];

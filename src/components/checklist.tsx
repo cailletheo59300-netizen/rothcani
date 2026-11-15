@@ -6,7 +6,7 @@ import { Submit } from "./submit";
 export type Progress = { has_location: boolean; has_lot: boolean; has_item_photo: boolean; has_online: boolean; has_sale: boolean };
 
 const ITEMS: { key: keyof Progress; label: string; hint: string; href: string }[] = [
-  { key: "has_lot", label: "Créer votre premier lot", hint: "Le coût de l'arrivage est réparti sur ses articles", href: "/lots" },
+  { key: "has_lot", label: "Créer votre premier lot", hint: "Le coût de l'arrivage est réparti sur ses articles", href: "/lots/nouveau" },
   { key: "has_item_photo", label: "Ajouter un article avec photo", hint: "Depuis votre téléphone, en quelques secondes", href: "/ajout" },
   { key: "has_location", label: "Créer un emplacement de rangement", hint: "Pour retrouver un article vendu en 5 secondes", href: "/reglages" },
   { key: "has_online", label: "Passer un article « En ligne »", hint: "Quand l'annonce est publiée sur Vinted", href: "/stock" },

@@ -90,7 +90,7 @@ export function ImportCsv() {
       }
       done += Math.min(100, items.length - i);
     }
-    setState({ busy: false, msg: `${done} articles importés ✔` });
+    setState({ busy: false, msg: `${done} articles importés.` });
     setRows([]);
     setColumns([]);
     router.refresh();

@@ -13,7 +13,7 @@ export type OnboardingData = {
   next: "lot" | "article" | "import" | "accueil";
 };
 
-const NEXT_URL = { lot: "/lots", article: "/ajout", import: "/reglages#import", accueil: "/" } as const;
+const NEXT_URL = { lot: "/lots/nouveau", article: "/ajout", import: "/reglages#import", accueil: "/" } as const;
 const clean = (list: string[], max: number) => [...new Set(list.map((s) => s.trim()).filter(Boolean))].slice(0, max);
 
 export async function completeOnboarding(d: OnboardingData) {

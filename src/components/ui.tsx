@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { STATUS_META } from "@/lib/format";
+import { ChevronLeft, ImageIcon } from "lucide-react";
+import { PHASE_DOT, STATUS_META } from "@/lib/format";
 import type { ItemStatus } from "@/lib/types";
 
+/** Statut = un point de couleur (l'étape) + un mot. Sobre et lisible partout. */
 export function StatusBadge({ status }: { status: ItemStatus }) {
   const m = STATUS_META[status];
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${m.tone}`}>
+    <span className="inline-flex items-center gap-1.5 text-xs text-muted">
+      <span className={`h-1.5 w-1.5 rounded-full ${PHASE_DOT[m.phase]}`} />
       {m.label}
     </span>
   );
@@ -23,39 +26,41 @@ export function PageHeader({
   back?: { href: string; label: string };
 }) {
   return (
-    <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
-      <div className="min-w-0">
-        {back && (
-          <Link href={back.href} className="mb-1 inline-block text-xs text-muted hover:text-text">
-            ← {back.label}
-          </Link>
-        )}
-        <h1 className="truncate text-2xl font-semibold tracking-tight">{title}</h1>
-        {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
+    <header className="mb-6">
+      {back && (
+        <Link href={back.href} className="-ml-1 mb-2 inline-flex items-center gap-0.5 text-sm text-muted hover:text-text">
+          <ChevronLeft size={16} /> {back.label}
+        </Link>
+      )}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-[26px] font-semibold leading-tight tracking-tight">{title}</h1>
+          {subtitle && <div className="mt-1 text-sm text-muted">{subtitle}</div>}
+        </div>
+        {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
       </div>
-      {action}
     </header>
   );
 }
 
-export function Stat({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: "good" | "bad" }) {
+export function Stat({ label, value, hint, tone, className }: { label: string; value: string; hint?: string; tone?: "good" | "bad"; className?: string }) {
   return (
-    <div className="card p-4">
-      <p className="text-xs text-muted">{label}</p>
-      <p className={`mt-1 text-2xl font-semibold tracking-tight ${tone === "good" ? "text-good" : tone === "bad" ? "text-bad" : ""}`}>
+    <div className={`card p-4 sm:p-5 ${className ?? ""}`}>
+      <p className="text-sm text-muted">{label}</p>
+      <p className={`mt-1 text-2xl font-semibold leading-tight tracking-tight sm:text-[28px] ${tone === "good" ? "text-good" : tone === "bad" ? "text-bad" : ""}`}>
         {value}
       </p>
-      {hint && <p className="mt-0.5 text-xs text-muted">{hint}</p>}
+      {hint && <p className="mt-1 text-[13px] text-muted">{hint}</p>}
     </div>
   );
 }
 
 export function Empty({ title, text, action }: { title: string; text?: string; action?: React.ReactNode }) {
   return (
-    <div className="card flex flex-col items-center gap-2 px-6 py-12 text-center">
-      <p className="font-medium">{title}</p>
-      {text && <p className="max-w-sm text-sm text-muted">{text}</p>}
-      {action && <div className="mt-2">{action}</div>}
+    <div className="card flex flex-col items-center px-6 py-14 text-center">
+      <p className="text-base font-medium">{title}</p>
+      {text && <p className="mt-1.5 max-w-sm text-sm text-muted">{text}</p>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }
@@ -69,13 +74,26 @@ export function Field({ label, children, className }: { label: string; children:
   );
 }
 
-export function Thumb({ url, alt }: { url?: string | null; alt: string }) {
+export function Section({ title, action, children, className }: { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
+  return (
+    <section className={className}>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="section-title">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+export function Thumb({ url, alt, size = "md" }: { url?: string | null; alt: string; size?: "md" | "lg" }) {
+  const cls = size === "lg" ? "h-14 w-14" : "h-11 w-11";
   return url ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={url} alt={alt} className="h-12 w-12 shrink-0 rounded-lg object-cover" />
+    <img src={url} alt={alt} className={`${cls} shrink-0 rounded-xl object-cover`} />
   ) : (
-    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-[10px] text-muted">
-      photo
+    <div className={`${cls} flex shrink-0 items-center justify-center rounded-xl bg-surface-2 text-muted/60`}>
+      <ImageIcon size={16} />
     </div>
   );
 }
