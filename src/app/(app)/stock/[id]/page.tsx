@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MapPin, QrCode } from "lucide-react";
+import { Copy, MapPin, QrCode } from "lucide-react";
 import { requireUser } from "@/lib/supabase/server";
 import { byId, loadCosts, loadProfile, loadRefs, saleMargin, signPhotos } from "@/lib/data";
 import { STATUS_META, date, euro, ref } from "@/lib/format";
@@ -9,7 +9,7 @@ import { ItemFields } from "@/components/item-fields";
 import { PhotoManager } from "@/components/photo-manager";
 import { AiListing } from "@/components/ai-listing";
 import { Submit } from "@/components/submit";
-import { cancelSale, createSale, deleteItem, markShipped, updateItem } from "../../actions";
+import { cancelSale, createSale, deleteItem, duplicateItem, markShipped, updateItem } from "../../actions";
 import type { Item, ItemStatus, Sale } from "@/lib/types";
 
 export default async function ItemPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,9 +38,16 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
       <PageHeader
         back={{ href: "/stock", label: "Stock" }}
         action={
-          <Link href={`/etiquettes?ids=${item.id}`} className="btn-ghost">
-            <QrCode size={16} /> Étiquette
-          </Link>
+          <div className="flex gap-2">
+            <form action={duplicateItem.bind(null, item.id)}>
+              <Submit className="btn-ghost">
+                <Copy size={16} /> Dupliquer
+              </Submit>
+            </form>
+            <Link href={`/etiquettes?ids=${item.id}`} className="btn-ghost">
+              <QrCode size={16} /> Étiquette
+            </Link>
+          </div>
         }
         title={item.title}
         subtitle={

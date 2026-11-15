@@ -72,6 +72,19 @@ export async function deleteItem(id: string) {
   redirect("/stock");
 }
 
+export async function duplicateItem(id: string) {
+  const { supabase } = await requireUser();
+  const { data } = await supabase.from("items").select("*").eq("id", id).maybeSingle();
+  if (!data) throw new Error("Article introuvable");
+  const { id: _id, user_id: _u, ref_number: _r, created_at: _c, status_changed_at: _s, listed_at: _l, photos: _p, ...rest } = data;
+  void [_id, _u, _r, _c, _s, _l, _p];
+  const status = ["vendu", "expedie", "ecarte"].includes(rest.status) ? "pret" : rest.status;
+  const { data: copy, error } = await supabase.from("items").insert({ ...rest, status }).select("id").single();
+  if (error) throw new Error(error.message);
+  revalidatePath("/", "layout");
+  redirect(`/stock/${copy.id}`);
+}
+
 /* ---------- Ventes ---------- */
 
 export async function createSale(itemId: string, fd: FormData) {

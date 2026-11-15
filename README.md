@@ -33,4 +33,4 @@ npm run dev
 - Étiquettes imprimables avec QR code
 - Génération d'annonces par IA (module 2)
 - Abonnements Stripe, espace administrateur
-- Tableau de bord au-delà de ~1 000 articles (agrégats à déplacer côté base)
+- Clé API Anthropic à ajouter sur Vercel pour activer l'IA

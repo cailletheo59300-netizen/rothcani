@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/supabase/server";
-import { loadCosts, loadProfile, saleMargin, signPhotos } from "@/lib/data";
-import { STATUS_META, IN_STOCK, euro, pct, ref, daysSince } from "@/lib/format";
+import { loadProfile, signPhotos } from "@/lib/data";
+import { STATUS_META, euro, pct, ref, daysSince } from "@/lib/format";
 import { PageHeader, Stat, Thumb, Empty } from "@/components/ui";
 import type { ItemStatus } from "@/lib/types";
 
@@ -13,9 +13,18 @@ export default async function Dashboard() {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const dormantBefore = new Date(Date.now() - profile.dormant_days * 86_400_000).toISOString();
 
-  const [statusRows, monthSales, dormant, allSales] = await Promise.all([
-    supabase.from("items").select("id,status"),
-    supabase.from("sales").select("*").gte("sold_on", monthStart),
+  type Stats = {
+    counts: Partial<Record<ItemStatus, number>>;
+    items_total: number;
+    stock_value: number;
+    month_sales: number;
+    month_revenue: number;
+    month_profit: number;
+    avg_days_to_sell: number | null;
+    dormant_count: number;
+  };
+  const [statsRes, dormant] = await Promise.all([
+    supabase.rpc("dashboard_stats", { month_start: monthStart, dormant_before: dormantBefore }),
     supabase
       .from("items")
       .select("id,ref_number,title,listed_price,listed_at,photos")
@@ -23,42 +32,19 @@ export default async function Dashboard() {
       .lt("listed_at", dormantBefore)
       .order("listed_at")
       .limit(6),
-    supabase.from("sales").select("item_id,sold_on"),
   ]);
-
-  const items = statusRows.data ?? [];
-  const counts = new Map<ItemStatus, number>();
-  items.forEach((i) => counts.set(i.status, (counts.get(i.status) ?? 0) + 1));
-
-  const costs = await loadCosts(supabase);
-  const stockValue = items.filter((i) => IN_STOCK.includes(i.status)).reduce((s, i) => s + (costs.get(i.id) ?? 0), 0);
-
-  const sales = monthSales.data ?? [];
-  const revenue = sales.reduce((s, x) => s + Number(x.sale_price), 0);
-  const profit = sales.reduce((s, x) => s + saleMargin(x, costs.get(x.item_id) ?? 0), 0);
-
-  // durée moyenne avant vente (jours entre mise en ligne et vente)
-  const soldIds = (allSales.data ?? []).map((s) => s.item_id);
-  let avgDays: number | null = null;
-  if (soldIds.length) {
-    const { data: listed } = await supabase.from("items").select("id,listed_at").in("id", soldIds.slice(0, 500));
-    const listedMap = new Map((listed ?? []).map((r) => [r.id, r.listed_at]));
-    const spans = (allSales.data ?? [])
-      .map((s) => {
-        const l = listedMap.get(s.item_id);
-        if (!l) return null;
-        const days = Math.round((Date.parse(s.sold_on) - Date.parse(String(l).slice(0, 10))) / 86_400_000);
-        return Math.max(0, days);
-      })
-      .filter((x): x is number => x !== null);
-    if (spans.length) avgDays = Math.round(spans.reduce((a, b) => a + b, 0) / spans.length);
-  }
+  const st = statsRes.data as Stats;
+  const counts = new Map(Object.entries(st.counts) as [ItemStatus, number][]);
+  const stockValue = Number(st.stock_value);
+  const revenue = Number(st.month_revenue);
+  const profit = Number(st.month_profit);
+  const avgDays = st.avg_days_to_sell;
 
   const dormantItems = dormant.data ?? [];
   const thumbs = await signPhotos(supabase, dormantItems.map((d) => d.photos?.[0]).filter(Boolean));
   const monthLabel = new Intl.DateTimeFormat("fr-FR", { month: "long" }).format(now);
 
-  if (items.length === 0) {
+  if (st.items_total === 0) {
     return (
       <>
         <PageHeader title="Bienvenue 👋" subtitle="Commencez par créer votre premier lot ou ajouter des articles." />
@@ -82,7 +68,7 @@ export default async function Dashboard() {
       <PageHeader title="Accueil" subtitle={`Vos chiffres de ${monthLabel}`} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Bénéfice du mois" value={euro(profit)} tone={profit >= 0 ? "good" : "bad"} hint={`${sales.length} vente${sales.length > 1 ? "s" : ""}`} />
+        <Stat label="Bénéfice du mois" value={euro(profit)} tone={profit >= 0 ? "good" : "bad"} hint={`${st.month_sales} vente${st.month_sales > 1 ? "s" : ""}`} />
         <Stat label="Chiffre d'affaires" value={euro(revenue)} hint={revenue ? `Marge ${pct(profit / revenue)}` : undefined} />
         <Stat label="Valeur du stock" value={euro(stockValue)} hint="au coût d'achat" />
         <Stat label="Délai moyen de vente" value={avgDays === null ? "—" : `${avgDays} j`} hint="de la mise en ligne à la vente" />
@@ -102,7 +88,7 @@ export default async function Dashboard() {
 
       <section className="mt-6">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-muted">Articles qui dorment (en ligne depuis plus de {profile.dormant_days} jours)</h2>
+          <h2 className="text-sm font-medium text-muted">Articles qui dorment ({st.dormant_count}, en ligne depuis plus de {profile.dormant_days} jours)</h2>
         </div>
         {dormantItems.length === 0 ? (
           <p className="card p-4 text-sm text-muted">Aucun article ne dort. 👌</p>

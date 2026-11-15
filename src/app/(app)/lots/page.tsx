@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/supabase/server";
 import { byId, loadRefs } from "@/lib/data";
-import { lotStats } from "@/lib/lot-stats";
+import { lotStats, supplierStats } from "@/lib/lot-stats";
 import { date, euro, pct } from "@/lib/format";
 import { Empty, PageHeader } from "@/components/ui";
 import { LotFields } from "@/components/lot-fields";
@@ -11,7 +11,11 @@ import { createLot } from "../actions";
 export default async function LotsPage() {
   const { supabase } = await requireUser();
   const refs = await loadRefs(supabase);
-  const stats = await lotStats(supabase, refs.lots);
+  const [stats, supStats] = await Promise.all([lotStats(supabase, refs.lots), supplierStats(supabase)]);
+  const supRows = refs.suppliers
+    .map((sp) => ({ ...sp, s: supStats.get(sp.id) }))
+    .filter((r) => r.s && r.s.lots > 0)
+    .sort((a, b) => b.s!.profit - a.s!.profit);
   const suppliers = byId(refs.suppliers);
 
   return (
@@ -70,6 +74,44 @@ export default async function LotsPage() {
             );
           })}
         </div>
+      )}
+
+      {supRows.length > 0 && (
+        <section className="mt-8">
+          <h2 className="mb-3 text-sm font-medium text-muted">Rentabilité par fournisseur</h2>
+          <div className="card overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs text-muted">
+                <tr className="border-b border-border">
+                  <th className="px-3 py-2 font-medium">Fournisseur</th>
+                  <th className="px-3 py-2 text-right font-medium">Lots</th>
+                  <th className="px-3 py-2 text-right font-medium">Vendus</th>
+                  <th className="px-3 py-2 text-right font-medium">Investi</th>
+                  <th className="px-3 py-2 text-right font-medium">Récupéré</th>
+                  <th className="px-3 py-2 text-right font-medium">Résultat</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {supRows.map(({ id, name, s }) => (
+                  <tr key={id}>
+                    <td className="px-3 py-2 font-medium">{name}</td>
+                    <td className="px-3 py-2 text-right">{s!.lots}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right">
+                      {s!.sold} / {s!.items}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right text-muted">{euro(s!.invested)}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right text-muted">{euro(s!.recovered)}</td>
+                    <td className={`whitespace-nowrap px-3 py-2 text-right font-medium ${s!.profit >= 0 ? "text-good" : "text-muted"}`}>
+                      {s!.profit >= 0 ? "+" : ""}
+                      {euro(s!.profit)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs text-muted">Un résultat négatif est normal tant que le lot n&apos;est pas écoulé : comparez surtout le rythme de vente.</p>
+        </section>
       )}
     </>
   );
