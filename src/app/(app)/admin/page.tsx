@@ -15,6 +15,8 @@ type Overview = {
   sales_total: number;
   sales_30d: number;
   lots_total: number;
+  ai_calls_30d: number;
+  ai_cost_30d: number;
   signups_by_day: { day: string; n: number }[];
   items_by_day: { day: string; n: number }[];
 };
@@ -38,7 +40,11 @@ export default async function AdminPage() {
         <Stat label="Utilisent le stock" value={String(o.users_with_items)} hint={o.users_total ? `${Math.round((o.users_with_items / o.users_total) * 100)} % des inscrits` : undefined} />
         <Stat label="Abonnés payants" value="—" hint="arrive avec Stripe" />
         <Stat label="Articles créés" value={String(o.items_total)} hint={`+${o.items_7d} cette semaine`} />
-        <Stat label="Lots créés" value={String(o.lots_total)} />
+        <Stat
+          label="Annonces IA (30 j)"
+          value={String(o.ai_calls_30d)}
+          hint={`coût ${Number(o.ai_cost_30d).toLocaleString("fr-FR", { style: "currency", currency: "USD" })} · ${o.lots_total} lots créés`}
+        />
         <Stat label="Ventes enregistrées" value={String(o.sales_total)} hint={`${o.sales_30d} sur 30 jours`} />
         <Stat label="Revenu mensuel (MRR)" value="—" hint="arrive avec Stripe" />
       </div>

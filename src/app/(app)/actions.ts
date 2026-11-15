@@ -23,6 +23,7 @@ function itemFields(fd: FormData) {
     manual_cost: num(fd.get("manual_cost")),
     listed_price: num(fd.get("listed_price")),
     floor_price: num(fd.get("floor_price")),
+    description: str(fd.get("description")),
     notes: str(fd.get("notes")),
     ...(isStatus(status) ? { status } : {}),
   };

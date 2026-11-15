@@ -30,6 +30,7 @@ export type Item = {
   location_id: string | null;
   sales_account_id: string | null;
   photos: string[];
+  description: string | null;
   notes: string | null;
   listed_at: string | null;
   status_changed_at: string;

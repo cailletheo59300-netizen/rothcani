@@ -91,7 +91,10 @@ export function ItemFields({
           ))}
         </select>
       </Field>
-      <Field label="Notes" className="col-span-2 md:col-span-4">
+      <Field label="Description de l'annonce" className="col-span-2 md:col-span-4">
+        <textarea name="description" rows={4} defaultValue={item?.description ?? ""} className="input" placeholder="Texte publié sur Vinted (l'IA peut le rédiger depuis la fiche)" />
+      </Field>
+      <Field label="Notes internes" className="col-span-2 md:col-span-4">
         <textarea name="notes" rows={2} defaultValue={item?.notes ?? ""} className="input" placeholder="Défaut, mesures, détails…" />
       </Field>
     </div>

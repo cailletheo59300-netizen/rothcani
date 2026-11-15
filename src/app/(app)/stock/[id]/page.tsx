@@ -7,6 +7,7 @@ import { STATUS_META, date, euro, ref } from "@/lib/format";
 import { Field, PageHeader, StatusBadge } from "@/components/ui";
 import { ItemFields } from "@/components/item-fields";
 import { PhotoManager } from "@/components/photo-manager";
+import { AiListing } from "@/components/ai-listing";
 import { Submit } from "@/components/submit";
 import { cancelSale, createSale, deleteItem, markShipped, updateItem } from "../../actions";
 import type { Item, ItemStatus, Sale } from "@/lib/types";
@@ -61,7 +62,9 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
             <PhotoManager itemId={item.id} photos={item.photos} urls={Object.fromEntries(urls)} />
           </section>
 
-          <form key={`${item.status}-${item.status_changed_at}`} action={updateItem.bind(null, item.id)} className="card space-y-4 p-4">
+          <AiListing itemId={item.id} hasPhotos={item.photos.length > 0} description={item.description} />
+
+          <form key={`${item.status}-${item.status_changed_at}-${item.title}-${item.description ?? ""}-${item.listed_price ?? ""}`} action={updateItem.bind(null, item.id)} className="card space-y-4 p-4">
             <h2 className="text-sm font-medium">Informations</h2>
             <ItemFields item={item} lots={refs.lots} locations={refs.locations} accounts={refs.accounts} />
             <div className="flex justify-end">

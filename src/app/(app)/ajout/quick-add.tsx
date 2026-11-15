@@ -53,6 +53,7 @@ export function QuickAdd({
       lot_id: str(fd.get("lot_id")),
       location_id: str(fd.get("location_id")),
       sales_account_id: str(fd.get("sales_account_id")),
+      description: str(fd.get("description")),
       notes: str(fd.get("notes")),
     };
     const { data, error: err } = await supabase.from("items").insert(row).select("id,ref_number,title").single();
